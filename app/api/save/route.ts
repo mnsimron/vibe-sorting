@@ -1,0 +1,31 @@
+import { Storage } from "@google-cloud/storage";
+import { NextResponse } from "next/server";
+
+const storage = new Storage();
+const bucketName = process.env.GCS_BUCKET_NAME!;
+
+export async function POST(req: Request) {
+  try {
+    const { image, label, sessionId }: { image: string; label: string; sessionId: string } = await req.json();
+
+    if (!sessionId) {
+      return NextResponse.json({ error: "Session ID is required" }, { status: 400 });
+    }
+
+    const bucket = storage.bucket(bucketName);
+    
+    // Nama file: folder session/timestamp-label.jpg
+    const fileName = `uploads/${sessionId}/${Date.now()}-${label.replace(/\s+/g, '_')}.jpg`;
+    const file = bucket.file(fileName);
+
+    await file.save(Buffer.from(image, 'base64'), {
+      contentType: 'image/jpeg',
+      metadata: { metadata: { label, sessionId } }
+    });
+
+    return NextResponse.json({ success: true, path: fileName });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "GCS Upload Failed" }, { status: 500 });
+  }
+}
