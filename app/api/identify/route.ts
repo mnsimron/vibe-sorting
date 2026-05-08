@@ -46,10 +46,14 @@ export async function POST(req: Request) {
     return NextResponse.json({
       label: text,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini Error:", error);
 
-    if (error?.status === 429) {
+    const isQuotaError =
+      error instanceof Error &&
+      error.message?.includes("429");
+
+    if (isQuotaError) {
       return NextResponse.json(
         {
           label:

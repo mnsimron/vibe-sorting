@@ -24,8 +24,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, path: fileName });
-  } catch (error) {
-    console.error(error);
+  } catch (error: unknown) {
+    console.error("GCS Error:", error);
     return NextResponse.json({ error: "GCS Upload Failed" }, { status: 500 });
   }
 }

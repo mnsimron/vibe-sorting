@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, Heart, RefreshCw, Loader2, Sparkles, CloudRain, Smile } from 'lucide-react';
+import Image from 'next/image';
+import { Camera, Upload, Heart, Loader2, Sparkles, CloudRain, Smile } from 'lucide-react';
 
 export default function JuaraVibeSorting() {
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -10,15 +11,15 @@ export default function JuaraVibeSorting() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
-  const [sessionId, setSessionId] = useState<string>('');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const countdownTimerRef = useRef<number | null>(null);
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
 
   const resizeImage = (base64: string): Promise<string> => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = document.createElement('img');
       img.src = base64;
       img.onload = () => {
         const canvas = document.createElement('canvas');
@@ -68,7 +69,7 @@ export default function JuaraVibeSorting() {
           setCountdown(null);
         }
       }, 1000);
-    } catch (err) {
+    } catch {
       alert("Ups! Izin kamera dibutuhkan ya.");
     }
   };
@@ -108,7 +109,7 @@ const processAI = async (resized: string) => {
       
       setResult(finalResult);
       speak(finalResult);
-    } catch (e) {
+    } catch {
       const errorMsg = "Sistem gagal merespon";
       setResult(errorMsg);
       speak(errorMsg);
@@ -123,17 +124,16 @@ const processAI = async (resized: string) => {
     try {
       await fetch('/api/save', {
         method: 'POST',
-        body: JSON.stringify({ image: preview.split(',')[1], label: result || '', sessionId }),
+        body: JSON.stringify({ image: preview.split(',')[1], label: result || '', sessionId: sessionIdRef.current }),
       });
       setIsSaved(true);
       speak("Selesai! Catatan kamu sudah disimpan.");
-    } catch (e) { alert("Maaf, gagal menyimpan"); }
-    finally { setLoading(false); }
+    } catch {
+      alert("Maaf, gagal menyimpan");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  useEffect(() => {
-    setSessionId(crypto.randomUUID());
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -164,7 +164,7 @@ const processAI = async (resized: string) => {
           {stream ? (
             <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
           ) : preview ? (
-            <img src={preview} className="w-full h-full object-cover" alt="Preview" />
+            <Image src={preview} alt="Preview" fill className="object-cover" />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-stone-400">
               <Smile size={64} strokeWidth={1} className="mb-4 opacity-40" />
