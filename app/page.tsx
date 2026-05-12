@@ -105,12 +105,12 @@ const processAI = async (resized: string) => {
       
       const data = await res.json();
       
-      const finalResult = data.label || "Gagal mengidentifikasi";
+      const finalResult = data.label || "Error identifying";
       
       setResult(finalResult);
-      speak(finalResult);
+      speak("this is a " + finalResult);
     } catch {
-      const errorMsg = "Sistem gagal merespon";
+      const errorMsg = "System error, try again later.";
       setResult(errorMsg);
       speak(errorMsg);
     } finally {
@@ -153,9 +153,9 @@ const processAI = async (resized: string) => {
           <Sparkles className="text-amber-600" size={28} />
         </div>
         <h1 className="text-2xl font-serif font-bold text-stone-900 tracking-tight text-center">
-          Teman Vibe <span className="text-amber-600">Kamu</span>
+          Vibe with<span className="text-amber-600"> Hearing</span>
         </h1>
-        <p className="text-sm text-stone-500 mt-1 italic text-center">Bantu kenali duniamu dengan lebih hangat.</p>
+        <p className="text-sm text-stone-500 mt-1 italic text-center">Help you know your world with more warmth.</p>
       </header>
 
       <main className="w-full max-w-md space-y-6 text-center">
@@ -168,7 +168,7 @@ const processAI = async (resized: string) => {
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-stone-400">
               <Smile size={64} strokeWidth={1} className="mb-4 opacity-40" />
-              <p className="text-sm font-medium">Klik tombol di bawah untuk mulai</p>
+              <p className="text-sm font-medium">Take a photo or upload an image to identify it.</p>
             </div>
           )}
 
@@ -190,8 +190,8 @@ const processAI = async (resized: string) => {
         {/* Identification Result - Warm Card */}
         {result && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 animate-in slide-in-from-bottom-4">
-            <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-1">Hasil Temuan Kami:</p>
-            <h2 className="text-xl font-bold text-stone-800 leading-tight">Ini terlihat seperti <span className="text-stone-900 underline decoration-amber-300 decoration-4">{result}</span></h2>
+            <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-1">Result that we found:</p>
+            <h2 className="text-xl font-bold text-stone-800 leading-tight">this is a <span className="text-stone-900 underline decoration-amber-300 decoration-4">{result}</span></h2>
           </div>
         )}
 
@@ -199,12 +199,12 @@ const processAI = async (resized: string) => {
         <div className="grid grid-cols-2 gap-4">
           <button onClick={startCamera} className="bg-stone-800 hover:bg-stone-900 text-white h-20 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg shadow-stone-200">
             <Camera size={26} />
-            <span className="text-xs font-bold mt-2">Ambil Foto</span>
+            <span className="text-xs font-bold mt-2">Take Photo</span>
           </button>
           
           <label className="bg-white border-2 border-stone-200 hover:border-stone-300 text-stone-700 h-20 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 cursor-pointer shadow-sm">
             <Upload size={24} />
-            <span className="text-xs font-bold mt-2">Dari Galeri</span>
+            <span className="text-xs font-bold mt-2">From Gallery</span>
             <input type="file" hidden accept="image/*" onChange={(e) => {
                const file = e.target.files?.[0];
                if (file) {
@@ -223,13 +223,13 @@ const processAI = async (resized: string) => {
 
         {result && !isSaved && (
           <button onClick={saveToCloud} className="w-full bg-amber-500 hover:bg-amber-600 text-white h-16 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-amber-200">
-            <Heart size={20} fill="currentColor" /> Simpan ke Kenangan
+            <Heart size={20} fill="currentColor" /> Save to Memories
           </button>
         )}
 
         {isSaved && (
           <div className="flex items-center justify-center gap-2 text-stone-500 text-sm font-medium animate-bounce">
-            <CloudRain size={16} className="text-amber-400" /> Tersimpan dengan aman di awan
+            <CloudRain size={16} className="text-amber-400" /> Saved securely in the cloud
           </div>
         )}
       </main>
