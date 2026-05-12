@@ -1,9 +1,7 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
   try {
@@ -19,29 +17,20 @@ export async function POST(req: Request) {
     const prompt =
       "Identify this object or waste type. Respond only with the object name.";
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: prompt,
-            },
-            {
-              inlineData: {
-                mimeType: "image/jpeg",
-                data: image,
-              },
-            },
-          ],
-        },
-      ],
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const text =
-      response.text?.trim() ||
-      "Tidak dapat mengidentifikasi";
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: image,
+        },
+      },
+    ]);
+
+    const response = await result.response;
+    const text = response.text().trim() || "Tidak dapat mengidentifikasi";
 
     return NextResponse.json({
       label: text,
