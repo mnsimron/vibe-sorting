@@ -35,8 +35,22 @@ function createStorageClient() {
 const storage = createStorageClient();
 const bucketName = process.env.GCS_BUCKET_NAME;
 
+const hasExplicitGcsCredentials = Boolean(
+  process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON ||
+  process.env.GOOGLE_CLOUD_KEYFILE_JSON ||
+  process.env.GCLOUD_KEYFILE_JSON ||
+  process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+  process.env.GOOGLE_CLOUD_KEYFILE ||
+  process.env.GCS_KEYFILE
+);
+
 export async function POST(req: Request) {
   try {
+    // In production (serverless) environments we must have explicit credentials
+    if (!hasExplicitGcsCredentials && (process.env.VERCEL || process.env.NODE_ENV === 'production')) {
+      console.error('GCS Error: missing explicit credentials (set GOOGLE_APPLICATION_CREDENTIALS_JSON in Vercel)');
+      return NextResponse.json({ error: 'GCS credentials not configured. Set GOOGLE_APPLICATION_CREDENTIALS_JSON (or equivalent) in your environment.' }, { status: 500 });
+    }
     const { image, label, sessionId }: { image: string; label: string; sessionId: string } = await req.json();
 
     if (!sessionId) {
