@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Camera, Upload, Heart, Loader2, Sparkles, CloudRain, Smile } from 'lucide-react';
+import { Camera, Upload, Heart, Loader2, Sparkles, CloudRain, Smile,RefreshCcw } from 'lucide-react';
 
 export default function JuaraVibeSorting() {
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -15,13 +15,21 @@ export default function JuaraVibeSorting() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionIdRef = useRef<string>(typeof window !== 'undefined' ? crypto.randomUUID() : '');
 
+  // PERBAIKAN UTAMA: Gunakan useEffect untuk menempelkan stream ke video
+  // Ini memastikan video muncul setelah elemen <video> dirender oleh React
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
   const resizeImage = (base64: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = document.createElement('img');
       img.src = base64;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX = 800;
+        const MAX = 800; // Sesuai kriteria hemat biaya
         let w = img.width, h = img.height;
         if (w > h) { if (w > MAX) { h *= MAX / w; w = MAX; } } 
         else { if (h > MAX) { w *= MAX / h; h = MAX; } }
@@ -35,7 +43,7 @@ export default function JuaraVibeSorting() {
 
   const speak = (text: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel(); // Hentikan suara sebelumnya agar tidak bertumpuk
+    window.speechSynthesis.cancel(); 
     const msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'id-ID';
     window.speechSynthesis.speak(msg);
@@ -49,7 +57,6 @@ export default function JuaraVibeSorting() {
   }, [stream]);
 
   const startCamera = async () => {
-    // Reset state sebelum mulai kamera baru
     setResult(null);
     setPreview(null);
     setIsSaved(false);
@@ -59,7 +66,7 @@ export default function JuaraVibeSorting() {
         video: { facingMode: 'environment' } 
       });
       setStream(s);
-      if (videoRef.current) videoRef.current.srcObject = s;
+      // Logic srcObject dipindahkan ke useEffect di atas agar tidak bugs
     } catch {
       alert("Ups! Izin kamera dibutuhkan untuk memindai objek ya.");
     }
@@ -68,13 +75,12 @@ export default function JuaraVibeSorting() {
   const capture = async () => {
     if (videoRef.current && canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d');
-      // Pastikan dimensi canvas sesuai dengan video
       canvasRef.current.width = videoRef.current.videoWidth;
       canvasRef.current.height = videoRef.current.videoHeight;
       ctx?.drawImage(videoRef.current, 0, 0);
       
       const raw = canvasRef.current.toDataURL('image/jpeg');
-      stopCamera(); // Matikan kamera segera setelah tangkap gambar
+      stopCamera(); 
 
       const resized = await resizeImage(raw);
       setPreview(resized);
@@ -92,12 +98,12 @@ export default function JuaraVibeSorting() {
       });
       
       const data = await res.json();
-      const finalResult = data.label || "Tidak dapat mengenali benda";
+      const finalResult = data.label || "Benda tidak dikenali";
       
       setResult(finalResult);
       speak("Ini adalah " + finalResult);
     } catch {
-      const errorMsg = "Sistem sedang sibuk, coba lagi nanti ya.";
+      const errorMsg = "Sistem sibuk, coba lagi nanti ya.";
       setResult(errorMsg);
       speak(errorMsg);
     } finally {
@@ -135,7 +141,6 @@ export default function JuaraVibeSorting() {
   return (
     <div className="min-h-screen bg-[#FDFCF8] text-stone-800 flex flex-col items-center p-6">
       
-      {/* Header */}
       <header className="w-full max-w-md flex flex-col items-center mb-8 pt-4">
         <div className="bg-amber-100 p-3 rounded-full mb-3">
           <Sparkles className="text-amber-600" size={28} />
@@ -150,9 +155,16 @@ export default function JuaraVibeSorting() {
         {/* Viewport */}
         <div className="relative aspect-square bg-stone-100 rounded-[2rem] overflow-hidden border-8 border-white shadow-xl shadow-stone-200/50">
           {stream ? (
-            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              className="w-full h-full object-cover scale-x-[-1]" 
+            />
           ) : preview ? (
-            <Image src={preview} alt="Hasil Foto" fill className="object-cover" />
+            <div className="relative w-full h-full">
+              <Image src={preview} alt="Hasil Foto" fill className="object-cover" />
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-stone-400 p-8">
               <Smile size={64} strokeWidth={1} className="mb-4 opacity-40" />
@@ -163,7 +175,7 @@ export default function JuaraVibeSorting() {
           {loading && (
             <div className="absolute inset-0 bg-stone-50/90 flex flex-col items-center justify-center">
               <Loader2 className="animate-spin text-amber-600 mb-3" size={48} />
-              <p className="text-sm font-medium text-stone-600 italic">Sedang melihat-lihat sebentar...</p>
+              <p className="text-sm font-medium text-stone-600 italic">Sedang menganalisis...</p>
             </div>
           )}
         </div>
@@ -171,30 +183,30 @@ export default function JuaraVibeSorting() {
         {/* Hasil Identifikasi */}
         {result && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 animate-in slide-in-from-bottom-4">
-            <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-1">Hasil yang ditemukan:</p>
-            <h2 className="text-xl font-bold text-stone-800 leading-tight italic">
+            <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-1 text-center">Hasil Deteksi:</p>
+            <h2 className="text-xl font-bold text-stone-800 leading-tight italic text-center">
               &quot;Ini adalah <span className="text-stone-900 underline decoration-amber-300 decoration-4">{result}</span>&quot;
             </h2>
           </div>
         )}
 
-        {/* Tombol Aksi */}
+        {/* Tombol Aksi Utama */}
         <div className="grid grid-cols-2 gap-4">
           {!stream ? (
             <button onClick={startCamera} className="bg-stone-800 hover:bg-stone-900 text-white h-20 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg shadow-stone-200">
               <Camera size={26} />
-              <span className="text-xs font-bold mt-2">Mulai Kamera</span>
+              <span className="text-xs font-bold mt-2 uppercase tracking-tighter">Mulai Kamera</span>
             </button>
           ) : (
             <button onClick={capture} className="bg-amber-500 hover:bg-amber-600 text-white h-20 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg shadow-amber-200">
               <Camera size={26} />
-              <span className="text-xs font-bold mt-2">Potret</span>
+              <span className="text-xs font-bold mt-2 uppercase tracking-tighter">Potret</span>
             </button>
           )}
 
           <label className="bg-white border-2 border-stone-200 hover:border-stone-300 text-stone-700 h-20 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 cursor-pointer shadow-sm">
             <Upload size={24} />
-            <span className="text-xs font-bold mt-2">Buka Galeri</span>
+            <span className="text-xs font-bold mt-2 uppercase tracking-tighter">Buka Galeri</span>
             <input type="file" hidden accept="image/*" onChange={(e) => {
                const file = e.target.files?.[0];
                if (file) {
@@ -203,7 +215,7 @@ export default function JuaraVibeSorting() {
                    const raw = ev.target?.result as string;
                    const resized = await resizeImage(raw);
                    setPreview(resized);
-                   setResult(null); // Bersihkan hasil lama
+                   setResult(null); 
                    processAI(resized);
                  };
                  reader.readAsDataURL(file);
@@ -212,31 +224,35 @@ export default function JuaraVibeSorting() {
           </label>
         </div>
 
-        {stream && (
-          <button onClick={stopCamera} className="w-full bg-stone-200 hover:bg-stone-300 text-stone-700 h-14 rounded-2xl font-semibold transition-all active:scale-95 shadow-sm">
-            Batal Kamera
-          </button>
-        )}
+        {/* Tombol Kontrol Tambahan */}
+        <div className="space-y-3">
+          {stream && (
+            <button onClick={stopCamera} className="w-full bg-stone-200 hover:bg-stone-300 text-stone-700 h-14 rounded-2xl font-semibold transition-all active:scale-95 shadow-sm">
+              Batal Kamera
+            </button>
+          )}
 
-        {result && (
-          <button onClick={() => speak("Ini adalah " + result)} className="w-full bg-white border border-amber-300 hover:bg-amber-50 text-amber-700 h-14 rounded-2xl font-semibold transition-all active:scale-95 shadow-sm">
-            Putar Ulang Suara Hasil
-          </button>
-        )}
+          {result && (
+            <button onClick={() => speak("Ini adalah " + result)} className="w-full bg-white border border-amber-300 hover:bg-amber-50 text-amber-700 h-14 rounded-2xl font-semibold transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2">
+              <RefreshCcw size={16} className="hidden" /> Putar Ulang Suara
+            </button>
+          )}
 
-        {result && !isSaved && (
-          <button onClick={saveToCloud} className="w-full bg-amber-500 hover:bg-amber-600 text-white h-16 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-amber-200">
-            <Heart size={20} fill="currentColor" /> Simpan ke Memori
-          </button>
-        )}
+          {result && !isSaved && (
+            <button onClick={saveToCloud} className="w-full bg-amber-500 hover:bg-amber-600 text-white h-16 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-amber-200">
+              <Heart size={20} fill="currentColor" /> Simpan ke Memori
+            </button>
+          )}
+        </div>
 
         {isSaved && (
-          <div className="flex items-center justify-center gap-2 text-stone-500 text-sm font-medium animate-bounce">
-            <CloudRain size={16} className="text-amber-400" /> Tersimpan dengan aman di awan
+          <div className="flex items-center justify-center gap-2 text-stone-500 text-sm font-medium animate-bounce pt-2">
+            <CloudRain size={16} className="text-amber-400" /> Tersimpan aman di awan
           </div>
         )}
       </main>
 
+      {/* Canvas Tersembunyi untuk Capture */}
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );
