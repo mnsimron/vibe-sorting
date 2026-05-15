@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Camera, Upload, Heart, Loader2, Sparkles, CloudRain, Smile } from 'lucide-react';
 
@@ -43,12 +43,12 @@ export default function JuaraVibeSorting() {
     window.speechSynthesis.speak(msg);
   };
 
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach(t => t.stop());
       setStream(null);
     }
-  };
+  }, [stream]);
 
   const startCamera = async () => {
     // Reset state sebelum mulai kamera baru
@@ -157,7 +157,7 @@ export default function JuaraVibeSorting() {
         clearInterval(countdownTimerRef.current);
       }
     };
-  }, []);
+  }, [stopCamera]);
 
   return (
     <div className="min-h-screen bg-[#FDFCF8] text-stone-800 flex flex-col items-center p-6">
@@ -207,7 +207,7 @@ export default function JuaraVibeSorting() {
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 animate-in slide-in-from-bottom-4">
             <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-1">Hasil yang ditemukan:</p>
             <h2 className="text-xl font-bold text-stone-800 leading-tight italic">
-              "Ini adalah <span className="text-stone-900 underline decoration-amber-300 decoration-4">{result}</span>"
+              &quot;Ini adalah <span className="text-stone-900 underline decoration-amber-300 decoration-4">{result}</span>&quot;
             </h2>
           </div>
         )}

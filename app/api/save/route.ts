@@ -8,7 +8,7 @@ function createStorageClient() {
   if (credentialsJson) {
     try {
       return new Storage({ credentials: JSON.parse(credentialsJson) });
-    } catch (error) {
+    } catch {
       throw new Error("Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable");
     }
   }
