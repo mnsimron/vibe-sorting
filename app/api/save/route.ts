@@ -2,19 +2,31 @@ import { Storage } from "@google-cloud/storage";
 import { NextResponse } from "next/server";
 
 function createStorageClient() {
-  const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
-  const keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  const credentialsJson =
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON ||
+    process.env.GOOGLE_CLOUD_KEYFILE_JSON ||
+    process.env.GCLOUD_KEYFILE_JSON;
+  const keyFilename =
+    process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+    process.env.GOOGLE_CLOUD_KEYFILE ||
+    process.env.GCS_KEYFILE;
+  const projectId =
+    process.env.GOOGLE_CLOUD_PROJECT ||
+    process.env.GCLOUD_PROJECT ||
+    process.env.GCP_PROJECT ||
+    process.env.GCS_PROJECT;
 
   if (credentialsJson) {
     try {
-      return new Storage({ credentials: JSON.parse(credentialsJson) });
+      const credentials = JSON.parse(credentialsJson);
+      return new Storage({ credentials, projectId: projectId || credentials.project_id });
     } catch {
-      throw new Error("Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable");
+      throw new Error("Invalid JSON in GOOGLE_APPLICATION_CREDENTIALS_JSON or equivalent env var");
     }
   }
 
   if (keyFilename) {
-    return new Storage({ keyFilename });
+    return new Storage({ keyFilename, projectId });
   }
 
   return new Storage();
