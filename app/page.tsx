@@ -108,7 +108,7 @@ const processAI = async (resized: string) => {
       const finalResult = data.label || "Error identifying";
       
       setResult(finalResult);
-      speak("this is a " + finalResult);
+      speak("ini adalah " + finalResult);
     } catch {
       const errorMsg = "System error, try again later.";
       setResult(errorMsg);
@@ -191,7 +191,7 @@ const processAI = async (resized: string) => {
         {result && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 animate-in slide-in-from-bottom-4">
             <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-1">Result that we found:</p>
-            <h2 className="text-xl font-bold text-stone-800 leading-tight">this is a <span className="text-stone-900 underline decoration-amber-300 decoration-4">{result}</span></h2>
+            <h2 className="text-xl font-bold text-stone-800 leading-tight">ini adalah <span className="text-stone-900 underline decoration-amber-300 decoration-4">{result}</span></h2>
           </div>
         )}
 

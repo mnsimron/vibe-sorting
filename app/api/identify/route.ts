@@ -15,9 +15,9 @@ export async function POST(req: Request) {
     }
 
     const prompt =
-      "Identify this object or waste type. Respond only with the object name.";
+      "Identifikasi benda atau jenis sampah ini. Hanya berikan nama bendanya.";
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const result = await model.generateContent([
       prompt,
