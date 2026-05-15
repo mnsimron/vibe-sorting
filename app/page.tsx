@@ -7,14 +7,12 @@ import { Camera, Upload, Heart, Loader2, Sparkles, CloudRain, Smile } from 'luci
 export default function JuaraVibeSorting() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const countdownTimerRef = useRef<number | null>(null);
   const sessionIdRef = useRef<string>(typeof window !== 'undefined' ? crypto.randomUUID() : '');
 
   const resizeImage = (base64: string): Promise<string> => {
@@ -55,12 +53,6 @@ export default function JuaraVibeSorting() {
     setResult(null);
     setPreview(null);
     setIsSaved(false);
-    
-    // Bersihkan interval jika ada yang masih berjalan (bugs fix)
-    if (countdownTimerRef.current) {
-      clearInterval(countdownTimerRef.current);
-      countdownTimerRef.current = null;
-    }
 
     try {
       const s = await navigator.mediaDevices.getUserMedia({ 
@@ -68,22 +60,6 @@ export default function JuaraVibeSorting() {
       });
       setStream(s);
       if (videoRef.current) videoRef.current.srcObject = s;
-
-      let count = 3;
-      setCountdown(count);
-      
-      countdownTimerRef.current = window.setInterval(() => {
-        count--;
-        setCountdown(count);
-        if (count === 0) {
-          if (countdownTimerRef.current) {
-            clearInterval(countdownTimerRef.current);
-            countdownTimerRef.current = null;
-          }
-          capture();
-          setCountdown(null);
-        }
-      }, 1000);
     } catch {
       alert("Ups! Izin kamera dibutuhkan untuk memindai objek ya.");
     }
@@ -153,9 +129,6 @@ export default function JuaraVibeSorting() {
   useEffect(() => {
     return () => {
       stopCamera();
-      if (countdownTimerRef.current) {
-        clearInterval(countdownTimerRef.current);
-      }
     };
   }, [stopCamera]);
 
@@ -187,13 +160,6 @@ export default function JuaraVibeSorting() {
             </div>
           )}
 
-          {/* Countdown */}
-          {countdown !== null && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-md">
-              <span className="text-8xl font-bold text-amber-600">{countdown}</span>
-            </div>
-          )}
-
           {loading && (
             <div className="absolute inset-0 bg-stone-50/90 flex flex-col items-center justify-center">
               <Loader2 className="animate-spin text-amber-600 mb-3" size={48} />
@@ -214,11 +180,18 @@ export default function JuaraVibeSorting() {
 
         {/* Tombol Aksi */}
         <div className="grid grid-cols-2 gap-4">
-          <button onClick={startCamera} className="bg-stone-800 hover:bg-stone-900 text-white h-20 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg shadow-stone-200">
-            <Camera size={26} />
-            <span className="text-xs font-bold mt-2">Ambil Foto</span>
-          </button>
-          
+          {!stream ? (
+            <button onClick={startCamera} className="bg-stone-800 hover:bg-stone-900 text-white h-20 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg shadow-stone-200">
+              <Camera size={26} />
+              <span className="text-xs font-bold mt-2">Mulai Kamera</span>
+            </button>
+          ) : (
+            <button onClick={capture} className="bg-amber-500 hover:bg-amber-600 text-white h-20 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg shadow-amber-200">
+              <Camera size={26} />
+              <span className="text-xs font-bold mt-2">Potret</span>
+            </button>
+          )}
+
           <label className="bg-white border-2 border-stone-200 hover:border-stone-300 text-stone-700 h-20 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 cursor-pointer shadow-sm">
             <Upload size={24} />
             <span className="text-xs font-bold mt-2">Buka Galeri</span>
@@ -238,6 +211,18 @@ export default function JuaraVibeSorting() {
             }} />
           </label>
         </div>
+
+        {stream && (
+          <button onClick={stopCamera} className="w-full bg-stone-200 hover:bg-stone-300 text-stone-700 h-14 rounded-2xl font-semibold transition-all active:scale-95 shadow-sm">
+            Batal Kamera
+          </button>
+        )}
+
+        {result && (
+          <button onClick={() => speak("Ini adalah " + result)} className="w-full bg-white border border-amber-300 hover:bg-amber-50 text-amber-700 h-14 rounded-2xl font-semibold transition-all active:scale-95 shadow-sm">
+            Putar Ulang Suara Hasil
+          </button>
+        )}
 
         {result && !isSaved && (
           <button onClick={saveToCloud} className="w-full bg-amber-500 hover:bg-amber-600 text-white h-16 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-amber-200">
