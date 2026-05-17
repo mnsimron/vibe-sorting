@@ -12,9 +12,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Vibe Sorting",
-  description: "Scan and hear what's around you with a warm vibe. Powered by Google Gemini AI.",
+export const metadata = {
+  title: "Vibe Mendengar",
+  description: "Mengenal dunia dengan lebih hangat melalui AI",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({
