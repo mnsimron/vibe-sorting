@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  // Kita abaikan pengecekan tipe khusus untuk file config ini saja
-  // agar tidak muncul error 'known properties'
   typescript: {
     ignoreBuildErrors: true,
   },
